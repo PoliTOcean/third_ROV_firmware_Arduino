@@ -1,6 +1,8 @@
 #include <SPI.h>
 #include <Ethernet.h>
 #include <PubSubClient.h>
+#include <Thread.h>
+#include <ThreadController.h>
 
 #define LED_PIN 8
 
@@ -44,7 +46,10 @@ byte mac[] = {
 
 EthernetClient ethClient;
 PubSubClient mqttClient(ethClient);
-const char *server = "192.168.0.108";
+Thread mqttLoop = Thread{};
+Thread readSensor = Thread{};
+ThreadController threadController = ThreadController{};
+const char *server = "192.168.0.111";
 const int port = 1883;
 
 void setup()
@@ -97,10 +102,33 @@ void setup()
   {
     Serial.println("Looks like the server connection failed...");
   }
+
+  mqttLoop.onRun([](){
+    mqttClient.loop();
+  });
+
+  readSensor.onRun([](){
+    if (mqttClient.publish("Temperature", /*String(tempC, 3).c_str()*/ "{\"value\":\"prova JSON\"}"))
+    {
+      Serial.println("Publish succeded!");
+    }
+    else
+    {
+      Serial.println("Publish failed!");
+    }
+  });
+
+  threadController.add(&mqttLoop);
+  threadController.add(&readSensor);
 }
 
 void loop()
 {
+  //mqttClient.loop();
+  /*if(mqttLoop.shouldRun()){
+    mqttLoop.run();
+  }*/
+
   switch (Ethernet.maintain())
   {
   case 1:
@@ -134,7 +162,6 @@ void loop()
     break;
   }
 
-  mqttClient.loop();
   //int adcVal = analogRead(A0);
 
   //float voltage = adcVal * 5.0 / 1024;
@@ -142,14 +169,7 @@ void loop()
   //float tempK = 1 / (log(Rt / 10) / 3950 + 1 / (273.15 + 25));
   //float tempC = tempK - 273.15;
 
-  if (mqttClient.publish("Temperature", /*String(tempC, 3).c_str()*/ "{\"value\":\"prova JSON\"}"))
-  {
-    Serial.println("Publish succeded!");
-  }
-  else
-  {
-    Serial.println("Publish failed!");
-  }
+  threadController.run();
 
-  delay(4000);
+  //delay(50);
 }
