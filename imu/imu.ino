@@ -10,6 +10,7 @@ EthernetClient ethClient;
 PubSubClient mqttClient(ethClient);
 const char *server = "192.168.0.108";
 const int port = 1883;
+char packet[85];
 
 void setup() {
   Ethernet.init(10); // SCSn pin
@@ -17,12 +18,12 @@ void setup() {
 
   Wire.begin();
   if (imu.begin((uint8_t)0x6a, (uint8_t)0x1c, Wire) == false){
-    //Serial.println("Failed to communicate with LSM9DS1.");
+    Serial.println("Failed to communicate with LSM9DS1.");
     while (1);
   }
   
   //Serial.print("Initialize Ethernet with DHCP:\n");
-  /*if (Ethernet.begin(mac) == 0){
+  if (Ethernet.begin(mac) == 0){
     Serial.println("Failed to configure Ethernet using DHCP");
     if (Ethernet.hardwareStatus() == EthernetNoHardware){
       Serial.println("Ethernet shield was not found.  Sorry, can't run without hardware. :(");
@@ -31,24 +32,22 @@ void setup() {
       Serial.println("Ethernet cable is not connected.");
     }
     // no point in carrying on, so do nothing forevermore:
-    //while (true);
+    while (true);
   }
 
   // print your local IP address:
-  Serial.print("My IP address: ");
-  Serial.println(Ethernet.localIP());*/
+  Serial.println(Ethernet.localIP());
 
   mqttClient.setServer(server, port);
   if (mqttClient.connect("atmega_imu")){
-    //Serial.println("Connection has been established, well done");
+    Serial.println("Connection has been established, well done");
   }
   else{
-    //Serial.println("Looks like the server connection failed...");
+    Serial.println("Looks like the server connection failed...");
     // no point in carrying on, so do nothing forevermore:
     //while (true);
   }
 }
-char packet[85];
 
 void loop() {
   switch (Ethernet.maintain()){
@@ -92,7 +91,7 @@ void loop() {
   if (imu.magAvailable()){
     imu.readMag();
   }
-  delay(2000);
+  delay(500);
   /*char ax_str[5], ay_str[5], az_str[5];
   dtostrf(imu.calcAccel(imu.ax),4,2,ax_str);
   dtostrf(imu.calcAccel(imu.ay),4,2,ay_str);
@@ -110,4 +109,11 @@ void loop() {
     String(imu.calcMag(imu.my)).c_str(),
     String(imu.calcMag(imu.mz)).c_str());
   Serial.println(packet);
+
+  if(mqttClient.publish("imu", packet)){
+    Serial.println("Publish succeded!");
+  }
+  else{
+    Serial.println("Publish failed!");
+  }
 }
