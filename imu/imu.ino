@@ -8,9 +8,9 @@ byte mac[] = {0x00, 0xAA, 0xBB, 0xCC, 0xDE, 0x02};
 LSM9DS1 imu;
 EthernetClient ethClient;
 PubSubClient mqttClient(ethClient);
-const char *server = "192.168.0.108";
+const char *server = "192.168.0.109";
 const int port = 1883;
-char packet[85];
+char packet[90];
 
 void setup() {
   Ethernet.init(10); // SCSn pin
@@ -50,6 +50,12 @@ void setup() {
 }
 
 void loop() {
+  if (mqttClient.connected()==false){
+    //Serial.println("MQTT Broker connection is down");
+    if (mqttClient.connect("atmega_imu")) {
+       //Serial.println("MQTT Broker Connection Restarted");
+    }
+  }
   switch (Ethernet.maintain()){
   case 1:
     //renewed fail
@@ -92,10 +98,6 @@ void loop() {
     imu.readMag();
   }
   delay(500);
-  /*char ax_str[5], ay_str[5], az_str[5];
-  dtostrf(imu.calcAccel(imu.ax),4,2,ax_str);
-  dtostrf(imu.calcAccel(imu.ay),4,2,ay_str);
-  dtostrf(imu.calcAccel(imu.az),4,2,az_str);*/
   
   sprintf(packet, 
     "{\"ax\":%s,\"ay\":%s,\"az\":%s,\"gx\":%s,\"gy\":%s,\"gz\":%s,\"mx\":%s\"my\":%s,\"mz\":%s}",
