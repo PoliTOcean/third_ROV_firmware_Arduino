@@ -8,7 +8,8 @@ byte mac[] = {0x00, 0xAA, 0xBB, 0xCC, 0xDE, 0x02};
 LSM9DS1 imu;
 EthernetClient ethClient;
 PubSubClient mqttClient(ethClient);
-const char *server = "192.168.0.109";
+const char *server = "10.0.0.254";
+IPAddress ip_atmega(10,0,0,2);
 const int port = 1883;
 char packet[90];
 
@@ -23,8 +24,8 @@ void setup() {
   }
   
   //Serial.print("Initialize Ethernet with DHCP:\n");
-  if (Ethernet.begin(mac) == 0){
-    Serial.println("Failed to configure Ethernet using DHCP");
+  Ethernet.begin(mac, ip_atmega);
+    /*Serial.println("Failed to configure Ethernet using DHCP");
     if (Ethernet.hardwareStatus() == EthernetNoHardware){
       Serial.println("Ethernet shield was not found.  Sorry, can't run without hardware. :(");
     }
@@ -33,10 +34,10 @@ void setup() {
     }
     // no point in carrying on, so do nothing forevermore:
     while (true);
-  }
+  }*/
 
   // print your local IP address:
-  Serial.println(Ethernet.localIP());
+  //Serial.println(Ethernet.localIP());
 
   mqttClient.setServer(server, port);
   if (mqttClient.connect("atmega_imu")){
