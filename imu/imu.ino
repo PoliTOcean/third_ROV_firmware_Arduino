@@ -1,17 +1,22 @@
 #include <Wire.h>
+#include "MS5837.h"
 #include <SPI.h>
 #include <Ethernet.h>
 #include <PubSubClient.h>
 #include <SparkFunLSM9DS1.h>
 
 byte mac[] = {0x00, 0xAA, 0xBB, 0xCC, 0xDE, 0x02};
+
 LSM9DS1 imu;
+MS5837 sensor;
+
 EthernetClient ethClient;
 PubSubClient mqttClient(ethClient);
 const char *server = "10.0.0.254";
 IPAddress ip_atmega(10,0,0,2);
 const int port = 1883;
 char packet[90];
+char pressure_packet[50];
 
 void setup() {
   Ethernet.init(10); // SCSn pin
@@ -38,6 +43,18 @@ void setup() {
 
   // print your local IP address:
   //Serial.println(Ethernet.localIP());
+  
+  // Initialize pressure sensor
+  // Returns true if initialization was successful
+  // We can't continue with the rest of the program unless we can initialize the sensor
+  while (!sensor.init()) {
+    Serial.println("Init failed!");
+    //Serial.println("Are SDA/SCL connected correctly?");
+    //Serial.println("Blue Robotics Bar30: White=SDA, Green=SCL");
+    //Serial.println("\n\n\n");
+    delay(5000);
+  }
+  sensor.setFluidDensity(997); // kg/m^3 (freshwater, 1029 for seawater)
 
   mqttClient.setServer(server, port);
   if (mqttClient.connect("atmega_imu")){
@@ -114,9 +131,40 @@ void loop() {
   Serial.println(packet);
 
   if(mqttClient.publish("imu", packet)){
-    Serial.println("Publish succeded!");
+    Serial.println("Publish imu succeded!");
   }
   else{
-    Serial.println("Publish failed!");
+    Serial.println("Publish imu failed!");
+  }
+
+  // Update pressure and temperature readings
+  sensor.read();
+
+  /** Pressure returned in mbar or mbar*conversion rate.
+ */
+  //Serial.print("Pressure: ");
+  //Serial.print(sensor.pressure());
+  //Serial.println(" mbar");
+
+  /** Depth returned in meters (valid for operation in incompressible
+ *  liquids only. Uses density that is set for fresh or seawater.
+ */
+
+  //Serial.print("Depth: ");         
+  //Serial.print(sensor.depth());
+  //Serial.println(" m");
+
+  sprintf(pressure_packet,
+          "{\"pressure\":%s,\"depth\":%s}",
+          String(sensor.pressure()).c_str(),
+          String(sensor.depth()).c_str());
+
+  Serial.println(pressure_packet);
+
+  if(mqttClient.publish("pressure", pressure_packet)){
+    Serial.println("Publish pressure succeded!");
+  }
+  else{
+    Serial.println("Publish pressure failed!");
   }
 }
