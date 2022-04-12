@@ -4,11 +4,13 @@
 #include <Ethernet.h>
 #include <PubSubClient.h>
 #include <SparkFunLSM9DS1.h>
+#include <Adafruit_BMP280.h>
 
 byte mac[] = {0x00, 0xAA, 0xBB, 0xCC, 0xDE, 0x02};
 
 LSM9DS1 imu;
-MS5837 sensor;
+MS5837 sensor;    //Pressure sensor
+Adafruit_BMP280 bmp; // Temperature sensor
 
 EthernetClient ethClient;
 PubSubClient mqttClient(ethClient);
@@ -17,6 +19,7 @@ IPAddress ip_atmega(10,0,0,2);
 const int port = 1883;
 char packet[90];
 char pressure_packet[50];
+char temperature_packet[40];
 
 void setup() {
   Ethernet.init(10); // SCSn pin
@@ -24,9 +27,28 @@ void setup() {
 
   Wire.begin();
   if (imu.begin((uint8_t)0x6a, (uint8_t)0x1c, Wire) == false){
-    Serial.println("Failed to communicate with LSM9DS1.");
+    //Serial.println("Failed to communicate with LSM9DS1.");
     while (1);
   }
+
+  unsigned status;
+  status = bmp.begin(/*x76, 0x58*/);  //address forced to 0x77 connectin SDO to VCC
+  if (!status) {
+    /*Serial.println(F("Could not find a valid BMP280 sensor, check wiring or "
+                      "try a different address!"));
+    Serial.print("SensorID was: 0x"); Serial.println(bmp.sensorID(),16);
+    Serial.print("        ID of 0xFF probably means a bad address, a BMP 180 or BMP 085\n");
+    Serial.print("   ID of 0x56-0x58 represents a BMP 280,\n");
+    Serial.print("        ID of 0x60 represents a BME 280.\n");
+    Serial.print("        ID of 0x61 represents a BME 680.\n");*/
+    while (1) delay(10);
+  }
+  /* Default settings from datasheet. */
+  bmp.setSampling(Adafruit_BMP280::MODE_NORMAL,     /* Operating Mode. */
+                  Adafruit_BMP280::SAMPLING_X2,     /* Temp. oversampling */
+                  Adafruit_BMP280::SAMPLING_X16,    /* Pressure oversampling */
+                  Adafruit_BMP280::FILTER_X16,      /* Filtering. */
+                  Adafruit_BMP280::STANDBY_MS_500); /* Standby time. */
   
   //Serial.print("Initialize Ethernet with DHCP:\n");
   Ethernet.begin(mac, ip_atmega);
@@ -48,7 +70,7 @@ void setup() {
   // Returns true if initialization was successful
   // We can't continue with the rest of the program unless we can initialize the sensor
   while (!sensor.init()) {
-    Serial.println("Init failed!");
+    Serial.println("Pressure sensor init failed!");
     //Serial.println("Are SDA/SCL connected correctly?");
     //Serial.println("Blue Robotics Bar30: White=SDA, Green=SCL");
     //Serial.println("\n\n\n");
@@ -58,10 +80,10 @@ void setup() {
 
   mqttClient.setServer(server, port);
   if (mqttClient.connect("atmega_imu")){
-    Serial.println("Connection has been established, well done");
+    //Serial.println("Connection has been established, well done");
   }
   else{
-    Serial.println("Looks like the server connection failed...");
+    //Serial.println("Looks like the server connection failed...");
     // no point in carrying on, so do nothing forevermore:
     //while (true);
   }
@@ -74,7 +96,7 @@ void loop() {
        //Serial.println("MQTT Broker Connection Restarted");
     }
   }
-  switch (Ethernet.maintain()){
+  /*switch (Ethernet.maintain()){
   case 1:
     //renewed fail
     //Serial.println("Error: renewed fail");
@@ -104,7 +126,7 @@ void loop() {
   default:
     //nothing happened
     break;
-  }
+  }*/
 
   if(imu.accelAvailable()){
     imu.readAccel();
@@ -130,11 +152,11 @@ void loop() {
     String(imu.calcMag(imu.mz)).c_str());
   Serial.println(packet);
 
-  if(mqttClient.publish("imu", packet)){
-    Serial.println("Publish imu succeded!");
+  if(mqttClient.publish("atmega_imu/imu", packet)){
+    //Serial.println("Publish imu succeded!");
   }
   else{
-    Serial.println("Publish imu failed!");
+    //Serial.println("Publish imu failed!");
   }
 
   // Update pressure and temperature readings
@@ -161,10 +183,27 @@ void loop() {
 
   Serial.println(pressure_packet);
 
-  if(mqttClient.publish("pressure", pressure_packet)){
-    Serial.println("Publish pressure succeded!");
+  if(mqttClient.publish("atmega_imu/pressure", pressure_packet)){
+    ///Serial.println("Publish pressure succeded!");
   }
   else{
-    Serial.println("Publish pressure failed!");
+    //Serial.println("Publish pressure failed!");
+  }
+
+  //Serial.print(F("Temperature = "));
+  //Serial.print(bmp.readTemperature());
+  //Serial.println(" *C");
+
+  sprintf(temperature_packet,
+          "{\"temperature\":%s}",
+          String(bmp.readTemperature()).c_str());
+
+  Serial.println(temperature_packet);
+
+  if(mqttClient.publish("atmega_imu/temperature", temperature_packet)){
+    ///Serial.println("Publish pressure succeded!");
+  }
+  else{
+    //Serial.println("Publish pressure failed!");
   }
 }
