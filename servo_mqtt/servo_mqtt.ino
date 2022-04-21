@@ -3,7 +3,8 @@
 #include <PubSubClient.h>
 #include <Servo.h>
 
-#define LED_PIN 8
+#define LED_PIN_1 3
+#define LED_PIN_2 5
 
 // Enter a MAC address for your controller below.
 byte mac[] = {
@@ -31,13 +32,11 @@ void subscribeReceivePositionAndLights(char *topic, byte *payload, unsigned int 
   cmd[length] = '\0';
 
   if(String(topic) == 'atmega_servo_lights/led'){
-    if (/*payload[0] & 0x01*/ String(cmd) == "on"){
-      Serial.print(cmd);
-      digitalWrite(LED_PIN, HIGH); // turn the LED on (HIGH is the voltage level)
-    }
-    else if (/*payload[0] & 0x01 == 0x00*/ String(cmd) == "off"){
-      Serial.print(cmd);
-      digitalWrite(LED_PIN, LOW); // turn the LED off by making the voltage LOW
+    int val = String(cmd).toInt();
+    if (val >= 0 && val <= 255 ){
+      //Serial.print(cmd);
+      analogWrite(LED_PIN_1, val);
+      analogWrite(LED_PIN_2, val);
     }
     else{
       //TODO (eventually)
@@ -57,7 +56,10 @@ void subscribeReceivePositionAndLights(char *topic, byte *payload, unsigned int 
 
 void setup()
 {
-  pinMode(LED_PIN, OUTPUT); //Led pin
+  pinMode(LED_PIN_1, OUTPUT); //Led pin
+  pinMode(LED_PIN_2, OUTPUT);
+  analogWrite(LED_PIN_1, 0);  //ligths off
+  analogWrite(LED_PIN_2, 0);
 
   myservo.attach(9);  // attaches the servo on pin 9 to the servo object
 
