@@ -80,12 +80,12 @@ void setup() {
 
   mqttClient.setServer(server, port);
   if (mqttClient.connect("atmega_imu")){
-    //Serial.println("Connection has been established, well done");
+    Serial.println("done");
   }
   else{
-    //Serial.println("Looks like the server connection failed...");
+    Serial.println("failed");
     // no point in carrying on, so do nothing forevermore:
-    //while (true);
+    while (true);
   }
 }
 
