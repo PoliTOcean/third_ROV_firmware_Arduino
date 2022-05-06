@@ -86,6 +86,12 @@ void setup()
 
 void loop()
 {
+  if (mqttClient.connected()==false){
+    //Serial.println("MQTT Broker connection is down");
+    if (mqttClient.connect("atmega_power")) {
+       //Serial.println("MQTT Broker Connection Restarted");
+    }
+  }
   mqttClient.loop();
   
   delay(4000);
