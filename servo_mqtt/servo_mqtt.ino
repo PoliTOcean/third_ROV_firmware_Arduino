@@ -98,6 +98,7 @@ void loop()
     //Serial.println("MQTT Broker connection is down");
     if (mqttClient.connect("tmega_servo_lights")) {
        //Serial.println("MQTT Broker Connection Restarted");
+       mqttClient.setCallback(subscribeReceivePositionAndLights);
        mqttClient.subscribe("atmega_servo_lights/servo");
        mqttClient.subscribe("atmega_servo_lights/led");
     }
