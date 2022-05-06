@@ -6,7 +6,7 @@
 #include <SparkFunLSM9DS1.h>
 #include <Adafruit_BMP280.h>
 
-byte mac[] = {0x00, 0xAA, 0xBB, 0xCC, 0xDE, 0x02};
+byte mac[] = {0x00, 0xAA, 0xBB, 0xCC, 0xDE, 0x55};
 
 LSM9DS1 imu;
 MS5837 sensor;    //Pressure sensor
@@ -15,7 +15,7 @@ Adafruit_BMP280 bmp; // Temperature sensor
 EthernetClient ethClient;
 PubSubClient mqttClient(ethClient);
 const char *server = "10.0.0.254";
-IPAddress ip_atmega(10,0,0,2);
+IPAddress ip_atmega(10,0,0,3);
 const int port = 1883;
 char packet[90];
 char pressure_packet[50];
@@ -24,7 +24,7 @@ char temperature_packet[40];
 void setup() {
   Ethernet.init(10); // SCSn pin
   Serial.begin(9600);
-
+  
   Wire.begin();
   if (imu.begin((uint8_t)0x6a, (uint8_t)0x1c, Wire) == false){
     //Serial.println("Failed to communicate with LSM9DS1.");
@@ -41,6 +41,7 @@ void setup() {
     Serial.print("   ID of 0x56-0x58 represents a BMP 280,\n");
     Serial.print("        ID of 0x60 represents a BME 280.\n");
     Serial.print("        ID of 0x61 represents a BME 680.\n");*/
+    Serial.println("Here");
     while (1) delay(10);
   }
   /* Default settings from datasheet. */
@@ -79,6 +80,7 @@ void setup() {
   sensor.setFluidDensity(997); // kg/m^3 (freshwater, 1029 for seawater)
 
   mqttClient.setServer(server, port);
+
   if (mqttClient.connect("atmega_imu")){
     Serial.println("done");
   }
