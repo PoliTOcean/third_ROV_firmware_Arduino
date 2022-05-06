@@ -6,6 +6,7 @@
 * nucleo: 10.0.0.3
 * atmega_servo_lights: 10.0.0.4
 * atmega_power: 10.0.0.5
+* stazione di terra: 10.0.0.252
 * mqtt broker (jetson): 10.0.0.254
 
 # MAC Mapping
