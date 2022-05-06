@@ -31,7 +31,7 @@ void subscribeReceivePositionAndLights(char *topic, byte *payload, unsigned int 
 
   cmd[length] = '\0';
 
-  if(String(topic) == 'atmega_servo_lights/led'){
+  if(String(topic) == "atmega_servo_lights/led"){
     int val = String(cmd).toInt();
     if (val >= 0 && val <= 255 ){
       //Serial.print(cmd);
@@ -43,7 +43,7 @@ void subscribeReceivePositionAndLights(char *topic, byte *payload, unsigned int 
     }
   }
 
-  if(String(topic) == 'atmega_servo_lights/servo'){
+  if(String(topic) == "atmega_servo_lights/servo"){
     String value(cmd);
     val = value.toInt();
     Serial.print(val);
@@ -61,7 +61,7 @@ void setup()
   analogWrite(LED_PIN_1, 0);  //ligths off
   analogWrite(LED_PIN_2, 0);
 
-  myservo.attach(9);  // attaches the servo on pin 9 to the servo object
+  myservo.attach(6);  // attaches the servo on pin 9 to the servo object
 
   Ethernet.init(10); // SCSn pin
 
