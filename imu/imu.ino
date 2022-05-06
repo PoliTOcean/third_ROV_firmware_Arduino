@@ -6,7 +6,7 @@
 #include <SparkFunLSM9DS1.h>
 #include <Adafruit_BMP280.h>
 
-byte mac[] = {0x00, 0xAA, 0xBB, 0xCC, 0xDE, 0x55};
+byte mac[] = {0x00, 0xAA, 0xBB, 0xCC, 0xDE, 0x02};
 
 LSM9DS1 imu;
 MS5837 sensor;    //Pressure sensor
@@ -15,7 +15,7 @@ Adafruit_BMP280 bmp; // Temperature sensor
 EthernetClient ethClient;
 PubSubClient mqttClient(ethClient);
 const char *server = "10.0.0.254";
-IPAddress ip_atmega(10,0,0,3);
+IPAddress ip_atmega(10,0,0,2);
 const int port = 1883;
 char packet[90];
 char pressure_packet[50];
