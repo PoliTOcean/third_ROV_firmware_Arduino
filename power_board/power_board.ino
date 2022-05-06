@@ -90,6 +90,10 @@ void loop()
     //Serial.println("MQTT Broker connection is down");
     if (mqttClient.connect("atmega_power")) {
        //Serial.println("MQTT Broker Connection Restarted");
+           mqttClient.setCallback( subscribePower );
+
+    //subscribe to a specific topic in order to receive those messages
+    mqttClient.subscribe("atmega_power/12_v");
     }
   }
   mqttClient.loop();
