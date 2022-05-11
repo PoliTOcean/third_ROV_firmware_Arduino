@@ -87,7 +87,7 @@ void setup() {
   else{
     Serial.println("failed");
     // no point in carrying on, so do nothing forevermore:
-    while (true);
+    //while (true);
   }
 }
 
