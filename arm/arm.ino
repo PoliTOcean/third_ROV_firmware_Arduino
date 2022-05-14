@@ -12,11 +12,11 @@
 // Create a new instance of the AccelStepper class:
 //AccelStepper stepper = AccelStepper(motorInterfaceType, pin_step, pin_dir);
 byte mac[] = {
-    0x00, 0xAA, 0xBB, 0xCC, 0xDE, 0x03};
+    0x00, 0xAA, 0xBB, 0xCC, 0xDE, 0x06};
 EthernetClient ethClient;
 PubSubClient mqttClient(ethClient);
 const char *server = "10.0.0.254";
-IPAddress ip_arm(10,0,0,4);
+IPAddress ip_arm(10,0,0,6);
 const int port = 1883;
 
 void subscribeArm(char *topic, byte *payload, unsigned int length)
