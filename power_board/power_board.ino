@@ -4,6 +4,8 @@
 
 #define _12_V_PIN 4
 
+unsigned char power_on = 0;
+
 void subscribePower(char *topic, byte *payload, unsigned int length)
 {
   Serial.print("Topic: ");
@@ -19,16 +21,17 @@ void subscribePower(char *topic, byte *payload, unsigned int length)
   }*/
   cmd[length] = '\0';
 
-  if(String(topic) == "atmega_power/12_v"){
-    if (/*payload[0] & 0x01*/ String(cmd) == "on")
+  if(String(topic) == "commands/"){
+    if (/*payload[0] & 0x01*/ String(cmd) == "TOGGLE POWER")
     {
-      Serial.print(cmd);
-      digitalWrite(_12_V_PIN, HIGH); 
-    }
-    else if (/*payload[0] & 0x01 == 0x00*/ String(cmd) == "off")
-    {
-      Serial.print(cmd);
-      digitalWrite(_12_V_PIN, LOW); 
+      if(!power_on){
+        power_on = 1;
+        digitalWrite(_12_V_PIN, HIGH);
+      }
+       else{
+        power_on = 0;
+        digitalWrite(_12_V_PIN, LOW); 
+       }
     }
     else
     {
@@ -76,7 +79,7 @@ void setup()
     mqttClient.setCallback( subscribePower );
 
     //subscribe to a specific topic in order to receive those messages
-    mqttClient.subscribe("atmega_power/12_v");
+    mqttClient.subscribe("commands/");
   }
   else
   {
@@ -93,7 +96,7 @@ void loop()
            mqttClient.setCallback( subscribePower );
 
     //subscribe to a specific topic in order to receive those messages
-    mqttClient.subscribe("atmega_power/12_v");
+    mqttClient.subscribe("commands/");
     }
   }
   mqttClient.loop();
