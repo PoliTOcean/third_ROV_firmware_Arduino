@@ -45,10 +45,13 @@ void subscribeReceivePositionAndLights(char *topic, byte *payload, unsigned int 
 
   if(String(topic) == "atmega_servo_lights/servo"){
     String value(cmd);
+    //myservo.attach(6);
+    delay(50);
     val = value.toInt();
     Serial.print(val);
     myservo.write(val);                  // sets the servo position according to the scaled value
-    delay(15);                           // waits for the servo to get there
+    delay(200);                           // waits for the servo to get there
+    //myservo.detach();
   }
   //newline
   Serial.println("");
@@ -106,5 +109,5 @@ void loop()
   mqttClient.loop();
   
   
-  delay(4000);
+  delay(20);
 }
