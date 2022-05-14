@@ -2,7 +2,7 @@
 #include <SPI.h>
 #include <Ethernet.h>
 #include <PubSubClient.h>
-#include <AccelStepper.h>
+//#include <AccelStepper.h>
 #define STEPS 400
 #define pin_step 4
 #define pin_dir 5
@@ -10,7 +10,7 @@
 #define motorInterfaceType 1
 
 // Create a new instance of the AccelStepper class:
-AccelStepper stepper = AccelStepper(motorInterfaceType, pin_step, pin_dir);
+//AccelStepper stepper = AccelStepper(motorInterfaceType, pin_step, pin_dir);
 byte mac[] = {
     0x00, 0xAA, 0xBB, 0xCC, 0xDE, 0x03};
 EthernetClient ethClient;
@@ -30,7 +30,7 @@ void subscribeArm(char *topic, byte *payload, unsigned int length)
 
   cmd[length] = '\0';
 
-  if(String(topic) == "wrist"){
+  /*if(String(topic) == "wrist"){
     stepper.setCurrentPosition(0);
     // Run the motor forward at 200 steps/second until the motor reaches 400 steps (2 revolutions):
     while(stepper.currentPosition() != 400)
@@ -38,18 +38,21 @@ void subscribeArm(char *topic, byte *payload, unsigned int length)
       stepper.setSpeed(400);
       stepper.runSpeed();
     }
-  }
+  }*/
 
-  if(String(topic) == "claw"){
-    digitalWrite(7, LOW);   //set direction for actuator
-    analogWrite(6, 127);    //move actuator
-    delay(2000);
-    digitalWrite(7, HIGH);
-    analogWrite(6, 127);
-    delay(2000);
+  if(String(topic) == "commands/"){
+    if(String(cmd) == "OPEN NIPPER"){
+      digitalWrite(7, HIGH);
+      analogWrite(6, 127);
+    }
+    else if(String(cmd) == "STOP NIPPER"){
+      analogWrite(6, 0);
+    }
+    else if(String(cmd) == "CLOSE NIPPER"){
+      digitalWrite(7, LOW);   //set direction for actuator
+      analogWrite(6, 127);    //move actuator
+    }
   }
-  //newline
-  Serial.println("");
 }
 
 void setup() {
@@ -64,7 +67,7 @@ void setup() {
   pinMode(7, OUTPUT);
   pinMode(6, OUTPUT);
   // Set the maximum speed in steps per second:
-  stepper.setMaxSpeed(1000);
+  //stepper.setMaxSpeed(1000);
   pinMode(A0, OUTPUT);
   digitalWrite(A0, HIGH);  //disable stepper
 
@@ -79,8 +82,7 @@ void setup() {
     mqttClient.setCallback(subscribeArm);
 
     //subscribe to a specific topic in order to receive those messages
-    mqttClient.subscribe("writst");
-    mqttClient.subscribe("claw");
+    mqttClient.subscribe("commands/");
   }
   else
   {
@@ -95,8 +97,7 @@ void loop() {
     if (mqttClient.connect("atmega_arm")) {
        //Serial.println("MQTT Broker Connection Restarted");
        mqttClient.setCallback(subscribeArm);
-       mqttClient.subscribe("wrist");
-       mqttClient.subscribe("claw");
+       mqttClient.subscribe("commands/");
     }
   }
   mqttClient.loop();
