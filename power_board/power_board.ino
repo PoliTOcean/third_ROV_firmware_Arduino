@@ -6,6 +6,16 @@
 
 unsigned char power_on = 0;
 
+// Enter a MAC address for your controller below.
+byte mac[] = {
+    0x00, 0xAA, 0xBB, 0xCC, 0xDE, 0x05};
+
+EthernetClient ethClient;
+PubSubClient mqttClient(ethClient);
+const char *server = "10.0.0.254";
+IPAddress ip_power(10,0,0,5);
+const int port = 1883;
+
 void subscribePower(char *topic, byte *payload, unsigned int length)
 {
   Serial.print("Topic: ");
@@ -27,10 +37,12 @@ void subscribePower(char *topic, byte *payload, unsigned int length)
       if(!power_on){
         power_on = 1;
         digitalWrite(_12_V_PIN, HIGH);
+        mqttClient.publish("components/", "{\"power\": \"Enabled\"}");
       }
        else{
         power_on = 0;
         digitalWrite(_12_V_PIN, LOW); 
+        mqttClient.publish("components/", "{\"power\": \"Disabled\"}");
        }
     }
     else
@@ -42,16 +54,6 @@ void subscribePower(char *topic, byte *payload, unsigned int length)
   //newline
   Serial.println("");
 }
-
-// Enter a MAC address for your controller below.
-byte mac[] = {
-    0x00, 0xAA, 0xBB, 0xCC, 0xDE, 0x05};
-
-EthernetClient ethClient;
-PubSubClient mqttClient(ethClient);
-const char *server = "10.0.0.254";
-IPAddress ip_power(10,0,0,5);
-const int port = 1883;
 
 void setup()
 {
