@@ -77,7 +77,7 @@ void setup() {
     //Serial.println("\n\n\n");
     delay(5000);
   }
-  sensor.setFluidDensity(997); // kg/m^3 (freshwater, 1029 for seawater)
+  sensor.setFluidDensity(1023); // kg/m^3 (freshwater, 1029 for seawater)
 
   mqttClient.setServer(server, port);
 
@@ -179,13 +179,13 @@ void loop() {
   //Serial.println(" m");
 
   sprintf(pressure_packet,
-          "{\"pressure\":%s,\"depth\":%s}",
-          String(sensor.pressure()).c_str(),
-          String(sensor.depth()).c_str());
+          "{\"depth\":%s}",
+          //String(sensor.pressure()).c_str(),
+          String((sensor.depth() - 189)/20).c_str());
 
   Serial.println(pressure_packet);
 
-  if(mqttClient.publish("atmega_imu/pressure", pressure_packet)){
+  if(mqttClient.publish("sensors/", pressure_packet)){
     ///Serial.println("Publish pressure succeded!");
   }
   else{
@@ -202,7 +202,7 @@ void loop() {
 
   Serial.println(temperature_packet);
 
-  if(mqttClient.publish("atmega_imu/temperature", temperature_packet)){
+  if(mqttClient.publish("sensors/", temperature_packet)){
     ///Serial.println("Publish pressure succeded!");
   }
   else{
