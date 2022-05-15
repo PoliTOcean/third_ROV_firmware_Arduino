@@ -2,6 +2,42 @@
 #include <Ethernet.h>
 #include <PubSubClient.h>
 
+#include <Linduino.h>
+
+#include <LT_I2CBus.h>
+#include <LT_SMBus.h>
+#include <LT_SMBusARA.h>
+#include <LT_SMBusBase.h>
+#include <LT_SMBusGroup.h>
+#include <LT_SMBusNoPec.h>
+#include <LT_SMBusPec.h>
+#include <LT_Wire.h>
+
+#include <LT_FaultLog.h>
+#include <LT_PMBus.h>
+#include <LT_PMBusDetect.h>
+#include <LT_PMBusDevice.h>
+#include <LT_PMBusMath.h>
+#include <LT_PMBusRail.h>
+#include <LT_PMBusSpeedTest.h>
+
+ uint8_t address1 = 32 ;
+ uint8_t address2 = 36 ;
+ float temperature1;
+ float Iout1;
+ float Vin1;
+ float Vout1;
+ float Iin1;
+
+ float temperature2;
+ float Iout2;
+ float Vin2;
+ float Vout2;
+ float Iin2;
+ 
+static LT_SMBus *smbus = new LT_SMBusNoPec();
+static LT_PMBus *pmbus = new LT_PMBus(smbus);
+
 #define _12_V_PIN 4
 
 unsigned char power_on = 0;
@@ -58,6 +94,7 @@ void subscribePower(char *topic, byte *payload, unsigned int length)
 void setup()
 {
   pinMode(_12_V_PIN, OUTPUT); //Led pin
+  digitalWrite(_12_V_PIN, HIGH);
 
   Ethernet.init(10); // SCSn pin
 
@@ -89,6 +126,9 @@ void setup()
   }
 }
 
+char current_packet[40];
+char voltage_packet[40];
+
 void loop()
 {
   if (mqttClient.connected()==false){
@@ -101,7 +141,23 @@ void loop()
     mqttClient.subscribe("commands/");
     }
   }
+
+  Iout1 = pmbus->readIout(address1, false);
+  temperature1 = pmbus->readOtemp(address1);
+  Vout1 = pmbus->readVout(address1, false);
+  Iout2 = pmbus->readIout(address2, false);
+  temperature2 = pmbus->readOtemp(address2);
+  Vout2 = pmbus->readVout(address2, false);
+
+  sprintf(current_packet, "{\"current\": %s}", String(Iout1 + Iout2).c_str());
+
+  mqttClient.publish("sensors/", current_packet);
+
+  sprintf(voltage_packet, "{\"voltage\": %s}", String((Vout1 + Vout2)/2.0).c_str());
+
+  mqttClient.publish("sensors/", voltage_packet);
+  
   mqttClient.loop();
   
-  delay(4000);
+  delay(500);
 }
