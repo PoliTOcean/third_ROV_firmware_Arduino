@@ -42,6 +42,7 @@ void subscribeArm(char *topic, byte *payload, unsigned int length)
 
   if(String(topic) == "commands/"){
     if(String(cmd) == "OPEN NIPPER"){
+      Serial.println(String(cmd));
       digitalWrite(7, HIGH);
       analogWrite(6, 127);
     }
