@@ -70,7 +70,7 @@ void loop() {
   MQTT_connect();
 
   Adafruit_MQTT_Subscribe *subscription;
-  while ((subscription = mqtt.readSubscription(1000))) {
+  while ((subscription = mqtt.readSubscription(15))) {
     if (subscription == &opennipper) {
       int dim = strlen((char *)opennipper.lastread);
       char cmd[dim+1];
@@ -89,7 +89,9 @@ void loop() {
         digitalWrite(7, LOW);   //set direction for actuator
         analogWrite(6, 127);    //move actuator
       }
+      break;
      }
+     
   }
 
   delay(15);
