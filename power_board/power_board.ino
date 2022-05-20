@@ -42,7 +42,7 @@ static LT_PMBus *pmbus = new LT_PMBus(smbus);
 #define _12_V_PIN 4
 #define AIO_SERVER      "10.0.0.254"
 #define AIO_SERVERPORT  1883
-#define AIO_USERNAME    "atmega"
+#define AIO_USERNAME    "atmega_power"
 
 unsigned char power_on = 1;
 
