@@ -14,7 +14,7 @@
 * limitations under the License.
 *******************************************************************************/
 
-#include <SoftwareSerial.h>
+//#include <SoftwareSerial.h>
 #include <Ethernet.h>
 #include "Adafruit_MQTT.h"
 #include "Adafruit_MQTT_Client.h"
@@ -26,7 +26,7 @@
 // Arm PCB v1_2560
 // ###############
 #include <Dynamixel2Arduino.h>
-#define DXL_SERIAL   Serial1
+#define DXL_SERIAL   Serial
 #define DEBUG_SERIAL Serial
 const uint8_t DXL_DIR_PIN = 30;
 
@@ -39,7 +39,7 @@ const uint8_t DXL_DIR_PIN = 30;
 
 
 // variabili del motore
-const uint8_t DXL_ID = 2;
+const uint8_t DXL_ID = 1;
 const float DXL_PROTOCOL_VERSION = 1.0;
 
 Dynamixel2Arduino dxl(DXL_SERIAL, DXL_DIR_PIN);
@@ -85,8 +85,6 @@ void setup() {
   
   mqtt.subscribe(&opennipper);
   // Use UART port of DYNAMIXEL Shield to debug.
-  DEBUG_SERIAL.begin(115200);
-  while(!DEBUG_SERIAL);
 
   // Set Port baudrate to 57600bps. This has to match with DYNAMIXEL baudrate.
   dxl.begin(57600);
@@ -120,6 +118,14 @@ void loop() {
   // Set Goal Position in RAW value
 
   MQTT_connect();
+
+  dxl.setGoalPosition(DXL_ID, 45, UNIT_DEGREE);
+
+  delay(2000);
+
+  dxl.setGoalPosition(DXL_ID, 0, UNIT_DEGREE);
+
+  delay(2000);
 
   Adafruit_MQTT_Subscribe *subscription;
   while ((subscription = mqtt.readSubscription(1000))) {
