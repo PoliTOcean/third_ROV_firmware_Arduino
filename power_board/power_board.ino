@@ -54,6 +54,7 @@ IPAddress ip_power(10,0,0,5);
 
 Adafruit_MQTT_Client mqtt(&client, AIO_SERVER, AIO_SERVERPORT, AIO_USERNAME/*, AIO_KEY*/);
 
+Adafruit_MQTT_Publish current_voltage = Adafruit_MQTT_Publish(&mqtt, "sensors/");
 // Function to connect and reconnect as necessary to the MQTT server.
 // Should be called in the loop function and it will take care if connecting.
 void MQTT_connect() {
@@ -142,10 +143,12 @@ void loop()
   sprintf(current_packet, "{\"current\": %s}", String(Iout1 + Iout2).c_str());
 
   //mqttClient.publish("sensors/", current_packet);
+  current_voltage.publish(current_packet);
 
   sprintf(voltage_packet, "{\"voltage\": %s}", String((Vout1 + Vout2)/2.0).c_str());
 
   //mqttClient.publish("sensors/", voltage_packet);
+  current_voltage.publish(voltage_packet);
   
   Adafruit_MQTT_Subscribe *subscription;
   while ((subscription = mqtt.readSubscription(1000))) {
