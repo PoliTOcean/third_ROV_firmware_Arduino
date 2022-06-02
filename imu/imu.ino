@@ -2,7 +2,8 @@
 #include "MS5837.h"
 #include <SPI.h>
 #include <Ethernet.h>
-#include <PubSubClient.h>
+#include "Adafruit_MQTT.h"
+#include "Adafruit_MQTT_Client.h"
 #include <SparkFunLSM9DS1.h>
 #include <Adafruit_BMP280.h>
 
@@ -12,17 +13,43 @@ LSM9DS1 imu;
 MS5837 sensor;    //Pressure sensor
 Adafruit_BMP280 bmp; // Temperature sensor
 
-EthernetClient ethClient;
-PubSubClient mqttClient(ethClient);
-const char *server = "10.0.0.254";
+EthernetClient client;
+#define AIO_SERVER      "10.0.0.254"
+#define AIO_SERVERPORT  1883
+#define AIO_USERNAME    "atmega_imu"
+
 IPAddress ip_atmega(10,0,0,2);
-const int port = 1883;
 char packet[90];
 char pressure_packet[50];
 char temperature_packet[40];
 
+Adafruit_MQTT_Client mqtt(&client, AIO_SERVER, AIO_SERVERPORT, AIO_USERNAME/*, AIO_KEY*/);
+Adafruit_MQTT_Publish sensors = Adafruit_MQTT_Publish(&mqtt, "sensors/");
+
+// Function to connect and reconnect as necessary to the MQTT server.
+// Should be called in the loop function and it will take care if connecting.
+void MQTT_connect() {
+  int8_t ret;
+
+  // Stop if already connected.
+  if (mqtt.connected()) {
+    return;
+  }
+
+  //Serial.print("Connecting to MQTT... ");
+
+  while ((ret = mqtt.connect()) != 0) { // connect will return 0 for connected
+       Serial.println(mqtt.connectErrorString(ret));
+       //Serial.println("Retrying MQTT connection in 0.015 seconds...");
+       mqtt.disconnect();
+       delay(15);  // wait 5 seconds
+  }
+  //Serial.println("MQTT Connected!");
+}
+
 void setup() {
   Ethernet.init(10); // SCSn pin
+
   Serial.begin(9600);
   
   Wire.begin();
@@ -41,7 +68,7 @@ void setup() {
     Serial.print("   ID of 0x56-0x58 represents a BMP 280,\n");
     Serial.print("        ID of 0x60 represents a BME 280.\n");
     Serial.print("        ID of 0x61 represents a BME 680.\n");*/
-    Serial.println("Here");
+    //Serial.println("Here");
     while (1) delay(10);
   }
   /* Default settings from datasheet. */
@@ -53,6 +80,7 @@ void setup() {
   
   //Serial.print("Initialize Ethernet with DHCP:\n");
   Ethernet.begin(mac, ip_atmega);
+  delay(1000);
     /*Serial.println("Failed to configure Ethernet using DHCP");
     if (Ethernet.hardwareStatus() == EthernetNoHardware){
       Serial.println("Ethernet shield was not found.  Sorry, can't run without hardware. :(");
@@ -79,56 +107,10 @@ void setup() {
   }
   sensor.setFluidDensity(1023); // kg/m^3 (freshwater, 1029 for seawater)
 
-  mqttClient.setServer(server, port);
-
-  if (mqttClient.connect("atmega_imu")){
-    Serial.println("done");
-  }
-  else{
-    Serial.println("failed");
-    // no point in carrying on, so do nothing forevermore:
-    //while (true);
-  }
 }
 
 void loop() {
-  if (mqttClient.connected()==false){
-    //Serial.println("MQTT Broker connection is down");
-    if (mqttClient.connect("atmega_imu")) {
-       //Serial.println("MQTT Broker Connection Restarted");
-    }
-  }
-  /*switch (Ethernet.maintain()){
-  case 1:
-    //renewed fail
-    //Serial.println("Error: renewed fail");
-    break;
-
-  case 2:
-    //renewed success
-    //Serial.println("Renewed success");
-    //print your local IP address:
-    //Serial.print("My IP address: ");
-    Serial.println(Ethernet.localIP());
-    break;
-
-  case 3:
-    //rebind fail
-    //Serial.println("Error: rebind fail");
-    break;
-
-  case 4:
-    //rebind success
-    //Serial.println("Rebind success");
-    //print your local IP address:
-    //Serial.print("My IP address: ");
-    Serial.println(Ethernet.localIP());
-    break;
-
-  default:
-    //nothing happened
-    break;
-  }*/
+  MQTT_connect();
 
   if(imu.accelAvailable()){
     imu.readAccel();
@@ -152,14 +134,9 @@ void loop() {
     String(imu.calcMag(imu.mx)).c_str(),
     String(imu.calcMag(imu.my)).c_str(),
     String(imu.calcMag(imu.mz)).c_str());
-  Serial.println(packet);
+  //Serial.println(packet);
 
-  if(mqttClient.publish("atmega_imu/imu", packet)){
-    //Serial.println("Publish imu succeded!");
-  }
-  else{
-    //Serial.println("Publish imu failed!");
-  }
+  sensors.publish(packet);
 
   // Update pressure and temperature readings
   sensor.read();
@@ -183,14 +160,9 @@ void loop() {
           //String(sensor.pressure()).c_str(),
           String((sensor.depth() - 189)/20).c_str());
 
-  Serial.println(pressure_packet);
+  //Serial.println(pressure_packet);
 
-  if(mqttClient.publish("sensors/", pressure_packet)){
-    ///Serial.println("Publish pressure succeded!");
-  }
-  else{
-    //Serial.println("Publish pressure failed!");
-  }
+  sensors.publish(pressure_packet);
 
   //Serial.print(F("Temperature = "));
   //Serial.print(bmp.readTemperature());
@@ -200,12 +172,7 @@ void loop() {
           "{\"temperature\":%s}",
           String(bmp.readTemperature()).c_str());
 
-  Serial.println(temperature_packet);
+  //Serial.println(temperature_packet);
 
-  if(mqttClient.publish("sensors/", temperature_packet)){
-    ///Serial.println("Publish pressure succeded!");
-  }
-  else{
-    //Serial.println("Publish pressure failed!");
-  }
+  sensors.publish(temperature_packet);
 }
