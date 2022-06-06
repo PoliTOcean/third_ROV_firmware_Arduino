@@ -14,9 +14,9 @@ MS5837 sensor;    //Pressure sensor
 Adafruit_BMP280 bmp; // Temperature sensor
 
 EthernetClient client;
-#define AIO_SERVER      "10.0.0.254"
-#define AIO_SERVERPORT  1883
-#define AIO_USERNAME    "atmega_imu"
+char* AIO_SERVER   =   "10.0.0.254";
+uint16_t AIO_SERVERPORT = 1883;
+char* AIO_USERNAME  =  "atmega_imu";
 
 IPAddress ip_atmega(10,0,0,2);
 char packet[90];
@@ -99,14 +99,14 @@ void setup() {
   // Returns true if initialization was successful
   // We can't continue with the rest of the program unless we can initialize the sensor
   while (!sensor.init()) {
-    Serial.println("Pressure sensor init failed!");
+    //Serial.println("Pressure sensor init failed!");
     //Serial.println("Are SDA/SCL connected correctly?");
     //Serial.println("Blue Robotics Bar30: White=SDA, Green=SCL");
     //Serial.println("\n\n\n");
     delay(5000);
   }
   sensor.setFluidDensity(1023); // kg/m^3 (freshwater, 1029 for seawater)
-
+  Serial.println("aa");
 }
 
 void loop() {
