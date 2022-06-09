@@ -44,13 +44,13 @@ void MQTT_connect() {
 void setup() {
   // put your setup code here, to run once:
   //servo.attach(6);
-  Ethernet.init(10); // SCSn pin
+  Ethernet.init(53); // SCSn pin
   Serial.begin(9600);
   while (!Serial)
   {
     ; // wait for serial port to connect. Needed for native USB port only
   }
-  pinMode(7, OUTPUT);
+  pinMode(49, OUTPUT);
   pinMode(6, OUTPUT);
   // Set the maximum speed in steps per second:
   //stepper.setMaxSpeed(1000);
@@ -78,15 +78,14 @@ void loop() {
       cmd[dim]='\0';
       Serial.println(cmd);
       if(String(cmd) == "OPEN NIPPER"){
-        Serial.println(String(cmd));
-        digitalWrite(7, HIGH);
+        digitalWrite(49, HIGH);
         analogWrite(6, 127);
       }
       else if(String(cmd) == "STOP NIPPER"){
         analogWrite(6, 0);
       }
       else if(String(cmd) == "CLOSE NIPPER"){
-        digitalWrite(7, LOW);   //set direction for actuator
+        digitalWrite(49, LOW);   //set direction for actuator
         analogWrite(6, 127);    //move actuator
       }
       break;
