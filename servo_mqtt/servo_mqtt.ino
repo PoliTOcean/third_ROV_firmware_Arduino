@@ -7,7 +7,7 @@
 #define LED_PIN_1 3
 #define LED_PIN_2 5
 
-#define AIO_SERVER      "10.0.0.12"
+#define AIO_SERVER      "10.0.0.254"
 #define AIO_SERVERPORT  1883
 #define AIO_USERNAME    "atmega_ligths"
 
